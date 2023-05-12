@@ -1,0 +1,40 @@
+version: "3"
+name: "fastnetmon"
+
+services:
+  fastnetmon:
+    image: "ghcr.io/pavel-odintsov/fastnetmon-community:latest"
+    container_name: "fastnetmon"
+    depends_on:
+      - "influxdb"
+    command:
+      - "/opt/fastnetmon-community/app/bin/fastnetmon"
+    ports:
+      - "2055:2055/udp"
+    volumes:
+      - "/etc/networks_list:/etc/networks_list:ro"
+      - "/etc/networks_whitelist:/etc/networks_whitelist:ro"
+      - "/etc/fastnetmon.conf:/etc/fastnetmon.conf:ro"
+    networks:
+      - "fastnetmon"
+    restart: "always"
+
+  influxdb:
+    image: "influxdb:1.8-alpine"
+    container_name: "fastnetmon_influxdb"
+    volumes:
+      - "fastnetmon_influxdb:/var/lib/influxdb"
+    env_file:
+      - "stack.env"
+    networks:
+      - "fastnetmon"
+      - "monitoring"
+    restart: always
+
+volumes:
+  fastnetmon_influxdb:
+
+networks:
+  fastnetmon:
+  monitoring:
+    external: true
